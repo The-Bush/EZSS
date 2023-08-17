@@ -1,10 +1,6 @@
-using System;
 using System.IO;
-using System.Windows.Forms;
 using System.Runtime.InteropServices;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace EZSS
 {
@@ -27,6 +23,10 @@ namespace EZSS
             }
 
             chkbxTogglePreview.Checked = Properties.Settings.Default.ViewPreview;
+            chkbxCaptureUnderMouse.Checked = Properties.Settings.Default.CaptureUnderMouse;
+            chkbxAutoDelete.Checked = Properties.Settings.Default.AutoDelete;
+            nupdwnAllowedQty.Value = Properties.Settings.Default.AllowedQuantity;
+            cmbboxHotkey.Text = Properties.Settings.Default.Hotkey;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -64,7 +64,7 @@ namespace EZSS
             }
         }
 
-        #region
+        #region WINAPI
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -77,10 +77,20 @@ namespace EZSS
         [DllImport("user32.dll")]
         private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
-        [DllImport("gdi32.dll")]
-        private static extern int BitBlt(IntPtr hdcDest, int xDest, int yDest, int width, int height, IntPtr hdcSrc, int xSrc, int ySrc, int dwRop);
+        [DllImport("user32.dll")]
+        public static extern IntPtr WindowFromPoint(Point point);
 
-        private const int SRCCOPY = 0x00CC0020;
+        [DllImport("user32.dll")]
+        static extern bool GetCursorPos(out Point lpPoint);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(IntPtr hWnd, out string lpString, int nMaxCount);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetFocus(IntPtr hWnd);
 
         private struct RECT
         {
@@ -91,10 +101,29 @@ namespace EZSS
         }
 
         #endregion
+
         public void CaptureScreenshot()
         {
 
-            IntPtr hwnd = GetForegroundWindow(); // Get the active window handle
+            IntPtr hwnd;
+            IntPtr previousForegroundHwnd = GetForegroundWindow();
+            if (Properties.Settings.Default.CaptureUnderMouse)
+            {
+                Point cursorPos;
+                GetCursorPos(out cursorPos);
+                hwnd = WindowFromPoint(cursorPos);
+
+                if (hwnd != previousForegroundHwnd)
+                {
+                    SetForegroundWindow(hwnd);
+                    SetFocus(hwnd);
+                }
+            }
+
+            else
+            {
+                hwnd = GetForegroundWindow();
+            }
 
             if (hwnd != IntPtr.Zero)
             {
@@ -103,6 +132,10 @@ namespace EZSS
                 {
                     int width = windowRect.right - windowRect.left;
                     int height = windowRect.bottom - windowRect.top;
+
+                    // Introduce a delay to allow UI changes to take effect
+                    int delayMilliseconds = 500;
+                    Thread.Sleep(delayMilliseconds);
 
                     Bitmap screenshot = new Bitmap(width, height);
 
@@ -114,11 +147,15 @@ namespace EZSS
                     }
 
                     // Display the captured screenshot in a new window
-                    using (ScreenshotPreviewForm previewForm = new ScreenshotPreviewForm(screenshot, this))
+                    using (ScreenshotPreviewForm previewForm = ScreenshotPreviewForm.GetInstance(screenshot, this))
                     {
+                        SetForegroundWindow(previousForegroundHwnd);
+                        SetFocus(previousForegroundHwnd);
+
                         if (Properties.Settings.Default.ViewPreview)
                         {
                             previewForm.ShowDialog();
+
                         }
 
                         else
@@ -126,7 +163,47 @@ namespace EZSS
                             SaveScreenshot(screenshot);
                         }
 
+
+                        SetForegroundWindow(previousForegroundHwnd);
+                        SetFocus(previousForegroundHwnd);
                     }
+
+
+                }
+            }
+        }
+        public void SaveScreenshot(Bitmap screenshot)
+        {
+            string directory = Properties.Settings.Default.SaveDirectory;
+
+            if (!string.IsNullOrEmpty(directory))
+            {
+                string fileName = Path.Combine(directory, DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "EZSS.png");
+                screenshot.Save(fileName, ImageFormat.Png);
+            }
+            else
+            {
+                MessageBox.Show("Please select a target directory.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            if (Properties.Settings.Default.AutoDelete)
+            {
+                DeleteOldScreenshots(directory);
+            }
+
+        }
+
+        private static void DeleteOldScreenshots(string directory)
+        {
+            // Dispose of any screenshots in target directory that exceed the maximum number of screenshots
+            string[] files = Directory.GetFiles(directory, "*EZSS.png");
+            int allowedQuantity = Properties.Settings.Default.AllowedQuantity;
+            if (files.Length > allowedQuantity)
+            {
+                Array.Sort(files);
+                for (int i = 0; i < files.Length - allowedQuantity; i++)
+                {
+                    File.Delete(files[i]);
                 }
             }
         }
@@ -137,19 +214,33 @@ namespace EZSS
             Properties.Settings.Default.Save();
         }
 
-        public void SaveScreenshot(Bitmap screenshot)
+        private void chkbxCaptureUnderMouse_CheckedChanged(object sender, EventArgs e)
         {
-            string directory = Properties.Settings.Default.SaveDirectory;
+            Properties.Settings.Default.CaptureUnderMouse = chkbxCaptureUnderMouse.Checked;
+            Properties.Settings.Default.Save();
+        }
 
-            if (!string.IsNullOrEmpty(directory))
-            {
-                string fileName = Path.Combine(directory, "screenshot.png");
-                screenshot.Save(fileName, ImageFormat.Png);
-            }
-            else
-            {
-                MessageBox.Show("Please select a target directory.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+        private void chkbxAutoDelete_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.AutoDelete = chkbxAutoDelete.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void nupdwnAllowedQty_ValueChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.AllowedQuantity = (int)nupdwnAllowedQty.Value;
+            Properties.Settings.Default.Save();
+        }
+
+        private void cmbboxHotkey_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Get the selected hotkey and save it to settings
+            Properties.Settings.Default.Hotkey = cmbboxHotkey.Text;
+            Properties.Settings.Default.Save();
+            //Conver the string to a Keys enum
+            KeysConverter converter = new KeysConverter();
+            Keys key = (Keys)converter.ConvertFromString(cmbboxHotkey.Text);
+            hiddenForm.UpdateHotKey(key);
         }
     }
 }

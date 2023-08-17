@@ -38,7 +38,7 @@
             // 
             pictureBoxScreenshot.Location = new Point(-1, 0);
             pictureBoxScreenshot.Name = "pictureBoxScreenshot";
-            pictureBoxScreenshot.Size = new Size(803, 452);
+            pictureBoxScreenshot.Size = new Size(423, 341);
             pictureBoxScreenshot.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBoxScreenshot.TabIndex = 0;
             pictureBoxScreenshot.TabStop = false;
@@ -46,7 +46,7 @@
             // btnCancel
             // 
             btnCancel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            btnCancel.Location = new Point(614, 397);
+            btnCancel.Location = new Point(223, 296);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(72, 31);
             btnCancel.TabIndex = 1;
@@ -57,7 +57,7 @@
             // btnSave
             // 
             btnSave.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            btnSave.Location = new Point(716, 397);
+            btnSave.Location = new Point(328, 296);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(72, 31);
             btnSave.TabIndex = 0;
@@ -70,13 +70,18 @@
             AcceptButton = btnSave;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            AutoSize = true;
             CancelButton = btnCancel;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(421, 339);
+            ControlBox = false;
             Controls.Add(btnSave);
             Controls.Add(btnCancel);
             Controls.Add(pictureBoxScreenshot);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "ScreenshotPreviewForm";
-            Text = "ScreenshotPreviewForm";
+            Text = "Screenshot Preview";
             Load += ScreenshotPreviewForm_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBoxScreenshot).EndInit();
             ResumeLayout(false);

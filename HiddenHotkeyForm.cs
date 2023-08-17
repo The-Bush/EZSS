@@ -42,7 +42,6 @@ namespace EZSS
             if (m.Msg == WM_HOTKEY)
             {
                 // Handle the hotkey event here
-                // For example: Show the main form
                 mainForm?.CaptureScreenshot();
             }
         }
@@ -53,5 +52,13 @@ namespace EZSS
             UnregisterHotKey(this.Handle, HOTKEY_ID);
         }
 
+        public void UpdateHotKey(Keys key)
+        {
+            UnregisterHotKey(this.Handle, HOTKEY_ID);
+            if (!RegisterHotKey(this.Handle, HOTKEY_ID, 0, (uint)key))
+            {
+                MessageBox.Show("Failed to register hotkey.");
+            }
+        }
     }
 }

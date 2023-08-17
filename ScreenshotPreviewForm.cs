@@ -15,6 +15,20 @@ namespace EZSS
     {
         private Bitmap screenshot;
         private MainForm mainForm;
+        private static ScreenshotPreviewForm? instance;
+
+        public static ScreenshotPreviewForm GetInstance(Bitmap screenshot, MainForm mainForm)
+        {
+            // Dispose the previous instance if it exists
+            if (instance != null && !instance.IsDisposed)
+            {
+                instance.Dispose();
+            }
+
+            instance = new ScreenshotPreviewForm(screenshot, mainForm);
+            return instance;
+        }
+
         public ScreenshotPreviewForm(Bitmap screenshot, MainForm mainForm)
         {
             InitializeComponent();
@@ -25,7 +39,20 @@ namespace EZSS
 
         private void ScreenshotPreviewForm_Load(object sender, EventArgs e)
         {
+            int x = Screen.PrimaryScreen.WorkingArea.Width - this.Width;
+            int y = Screen.PrimaryScreen.WorkingArea.Height - this.Height;
+            this.Location = new Point(x, y);
 
+            this.Activate();
+
+            AutoSaveAfterSeconds(10000);
+        }
+
+        private async void AutoSaveAfterSeconds(Int32 milliseconds)
+        {
+            await Task.Delay(milliseconds);
+            mainForm.SaveScreenshot(screenshot);
+            Close();
         }
 
         private void ScreenshotPreviewForm_Paint(object sender, PaintEventArgs e)
@@ -33,7 +60,6 @@ namespace EZSS
             if (screenshot != null)
             {
                 e.Graphics.DrawImage(screenshot, Point.Empty);
-                TopMost = true;
             }
             else
             {
