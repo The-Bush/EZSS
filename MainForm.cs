@@ -1,6 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace EZSS
 {
@@ -29,8 +30,11 @@ namespace EZSS
             cmbboxHotkey.Text = Properties.Settings.Default.Hotkey;
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
+            int x = Screen.PrimaryScreen.WorkingArea.Width - this.Width;
+            int y = Screen.PrimaryScreen.WorkingArea.Height - this.Height;
+            this.Location = new Point(x, y);
         }
 
         // Update the Target Directory for saved screenshots
@@ -169,7 +173,10 @@ namespace EZSS
 
                         else
                         {
-                            SaveScreenshot(screenshot);
+                            if (SaveScreenshot(screenshot))
+                            {
+                                ScreenshotNotification();
+                            }
                         }
 
 
@@ -181,18 +188,60 @@ namespace EZSS
                 }
             }
         }
-        public void SaveScreenshot(Bitmap screenshot)
+
+        private static void ScreenshotNotification()
+        {
+
+            ToastNotificationManagerCompat.History.Clear();
+
+            new ToastContentBuilder()
+                .AddText("Screenshot Saved as")
+                .AddText($"")
+                .AddAudio(new ToastAudio() { Silent = true })
+                .Show(toast =>
+                {
+                    toast.ExpirationTime = DateTime.Now.AddSeconds(3);
+                });
+
+        }
+
+        //TODO, update preview window to a toast notification
+        private static void ScrenshotPreviewNotification(Bitmap Image)
+        {
+            //Generate a temporary saved file from the given Image bitmap
+            string ImagePath = Path.GetTempFileName();
+            Image.Save(ImagePath);
+
+            new ToastContentBuilder()
+                .AddInlineImage(new Uri(ImagePath))
+                .AddArgument("ImagePath", ImagePath)
+                .AddButton(new ToastButton()
+                    .SetContent("Save")
+                    .AddArgument("action", "save")
+                    .SetBackgroundActivation())
+                .AddButton(new ToastButton()
+                    .SetContent("Discard")
+                    .AddArgument("action", "delete")
+                    .SetBackgroundActivation())
+                .Show();
+
+
+        }
+
+        public bool SaveScreenshot(Bitmap screenshot)
         {
             string directory = Properties.Settings.Default.SaveDirectory;
 
             if (!string.IsNullOrEmpty(directory))
             {
-                string fileName = Path.Combine(directory, DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "EZSS.png");
+                //Combine the directory and filename to create a full path
+                string fileName = Path.Combine(directory, GenerateFileName());
                 screenshot.Save(fileName, ImageFormat.Png);
             }
             else
             {
                 MessageBox.Show("Please select a target directory.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
 
             if (Properties.Settings.Default.AutoDelete)
@@ -200,6 +249,14 @@ namespace EZSS
                 DeleteOldScreenshots(directory);
             }
 
+            return true;
+
+        }
+
+        private static string GenerateFileName()
+        {
+            return $"{DateTime.Now:yyyy-MM-dd--HH-mm-ss}--" +
+                $"EZSS.png";
         }
 
         private static void DeleteOldScreenshots(string directory)
@@ -217,24 +274,6 @@ namespace EZSS
             }
         }
 
-        private void chkbxTogglePreview_CheckedChange(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.ViewPreview = chkbxTogglePreview.Checked;
-            Properties.Settings.Default.Save();
-        }
-
-        private void chkbxCaptureUnderMouse_CheckedChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.CaptureUnderMouse = chkbxCaptureUnderMouse.Checked;
-            Properties.Settings.Default.Save();
-        }
-
-        private void chkbxAutoDelete_CheckedChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.AutoDelete = chkbxAutoDelete.Checked;
-            Properties.Settings.Default.Save();
-        }
-
         private void nupdwnAllowedQty_ValueChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.AllowedQuantity = (int)nupdwnAllowedQty.Value;
@@ -250,6 +289,29 @@ namespace EZSS
             KeysConverter converter = new KeysConverter();
             Keys key = (Keys)converter.ConvertFromString(cmbboxHotkey.Text);
             hiddenForm.UpdateHotKey(key);
+        }
+
+        private void chkbxAutoDelete_CheckedChanged(object sender)
+        {
+            Properties.Settings.Default.AutoDelete = chkbxAutoDelete.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void chkbxCaptureUnderMouse_CheckedChanged(object sender)
+        {
+            Properties.Settings.Default.CaptureUnderMouse = chkbxCaptureUnderMouse.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void chkbxTogglePreview_CheckedChanged(object sender)
+        {
+            Properties.Settings.Default.ViewPreview = chkbxTogglePreview.Checked;
+            Properties.Settings.Default.Save();
+        }
+
+        private void btnMinimize_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Minimized;
         }
     }
 }
