@@ -23,6 +23,7 @@ namespace EZSS
                 lblTargetDirectory.Text = "NO DIRECTORY SELECTED";
             }
 
+            // Set all the settings to their saved values
             chkbxTogglePreview.Checked = Properties.Settings.Default.ViewPreview;
             chkbxCaptureUnderMouse.Checked = Properties.Settings.Default.CaptureUnderMouse;
             chkbxAutoDelete.Checked = Properties.Settings.Default.AutoDelete;
@@ -32,13 +33,14 @@ namespace EZSS
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            // Set the form to the bottom right of the screen
             int x = Screen.PrimaryScreen.WorkingArea.Width - this.Width;
             int y = Screen.PrimaryScreen.WorkingArea.Height - this.Height;
             this.Location = new Point(x, y);
         }
 
         // Update the Target Directory for saved screenshots
-        private void btnChangeDirectory_Click_1(object sender, EventArgs e)
+        private void btnChangeDirectory_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -177,6 +179,7 @@ namespace EZSS
                             {
                                 ScreenshotNotification();
                             }
+                            previewForm.Dispose();
                         }
 
 
@@ -255,8 +258,8 @@ namespace EZSS
 
         private static string GenerateFileName()
         {
-            return $"{DateTime.Now:yyyy-MM-dd--HH-mm-ss}--" +
-                $"EZSS.png";
+            //TODO: Add option to customize file names
+            return $"{DateTime.Now:yyyy-MM-dd--HH-mm-ss}--" + $"EZSS.png";
         }
 
         private static void DeleteOldScreenshots(string directory)
@@ -287,8 +290,15 @@ namespace EZSS
             Properties.Settings.Default.Save();
             //Conver the string to a Keys enum
             KeysConverter converter = new KeysConverter();
-            Keys key = (Keys)converter.ConvertFromString(cmbboxHotkey.Text);
-            hiddenForm.UpdateHotKey(key);
+            if (Enum.TryParse(cmbboxHotkey.Text, out Keys key))
+            {
+                hiddenForm.UpdateHotKey(key);
+            }
+            else
+            {
+                //Display error box
+                MessageBox.Show("Invalid hotkey selected.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void chkbxAutoDelete_CheckedChanged(object sender)
