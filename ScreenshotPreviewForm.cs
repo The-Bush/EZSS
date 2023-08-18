@@ -1,15 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace EZSS
+﻿namespace EZSS
 {
     public partial class ScreenshotPreviewForm : Form
     {
@@ -50,11 +39,21 @@ namespace EZSS
 
         private async void AutoSaveAfterSeconds(Int32 milliseconds)
         {
+            UpdateCountdownLabel(milliseconds);
             await Task.Delay(milliseconds);
             mainForm.SaveScreenshot(screenshot);
             Close();
         }
 
+        private async void UpdateCountdownLabel(Int32 milliseconds)
+        {
+            //Timer that updates the countdown label every second
+            for (int i = 0; i < milliseconds / 1000; i++)
+            {
+                lblCountdown.Text = $"Auto saving in... {(milliseconds / 1000 - i).ToString()}s";
+                await Task.Delay(1000);
+            }
+        }
         private void ScreenshotPreviewForm_Paint(object sender, PaintEventArgs e)
         {
             if (screenshot != null)
@@ -76,6 +75,27 @@ namespace EZSS
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void pictureBoxScreenshot_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ScreenshotPreviewForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            // if key is ENTER, save and set dialog result to OK, if ESC, set dialog result to Cancel and close
+            if (e.KeyCode == Keys.Enter)
+            {
+                mainForm.SaveScreenshot(screenshot);
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                DialogResult = DialogResult.Cancel;
+                Close();
+            }
         }
     }
 }
