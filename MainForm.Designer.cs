@@ -169,7 +169,11 @@
             Controls.Add(lblTargetDirectory);
             Controls.Add(btnChangeDirectory);
             Controls.Add(lblTargetDirectoryTitle);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximumSize = new Size(1920, 1032);
+            MinimumSize = new Size(190, 40);
             Name = "MainForm";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "Form1";
             Load += Form1_Load;
             SizeChanged += MainForm_SizeChanged;

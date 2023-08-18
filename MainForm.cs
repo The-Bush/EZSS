@@ -92,6 +92,15 @@ namespace EZSS
         [DllImport("user32.dll")]
         private static extern IntPtr SetFocus(IntPtr hWnd);
 
+        // Add GetAncestor method from windows API
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
+
+        // Define the flags for GetAncestor
+        private const uint GA_PARENT = 1;
+        private const uint GA_ROOT = 2;
+        private const uint GA_ROOTOWNER = 3;
+
         private struct RECT
         {
             public int left;
@@ -112,7 +121,7 @@ namespace EZSS
                 Point cursorPos;
                 GetCursorPos(out cursorPos);
                 hwnd = WindowFromPoint(cursorPos);
-
+                hwnd = GetAncestor(hwnd, GA_ROOT);
                 if (hwnd != previousForegroundHwnd)
                 {
                     SetForegroundWindow(hwnd);
