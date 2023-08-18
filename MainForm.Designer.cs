@@ -77,9 +77,9 @@
             lblShortcutKeyTitle.ForeColor = Color.FromArgb(243, 243, 243);
             lblShortcutKeyTitle.Location = new Point(12, 98);
             lblShortcutKeyTitle.Name = "lblShortcutKeyTitle";
-            lblShortcutKeyTitle.Size = new Size(70, 13);
+            lblShortcutKeyTitle.Size = new Size(99, 13);
             lblShortcutKeyTitle.TabIndex = 7;
-            lblShortcutKeyTitle.Text = "Shortcut key:";
+            lblShortcutKeyTitle.Text = "Screenshot hotkey:";
             ttpCaptureUnderMouse.SetToolTip(lblShortcutKeyTitle, "Set the shortcut that will trigger the screenshot to be taken");
             // 
             // chkbxAutoDelete
@@ -96,7 +96,7 @@
             chkbxAutoDelete.Size = new Size(130, 22);
             chkbxAutoDelete.TabIndex = 10;
             chkbxAutoDelete.Text = "Auto Delete";
-            ttpCaptureUnderMouse.SetToolTip(chkbxAutoDelete, "Enabe to automatically clean old screenshots from the save directory.");
+            ttpCaptureUnderMouse.SetToolTip(chkbxAutoDelete, "Enable to automatically clean old screenshots from the save directory.");
             chkbxAutoDelete.CheckedChanged += chkbxAutoDelete_CheckedChanged;
             // 
             // chkbxCaptureUnderMouse
