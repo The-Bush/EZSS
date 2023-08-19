@@ -198,8 +198,7 @@ namespace EZSS
             ToastNotificationManagerCompat.History.Clear();
 
             new ToastContentBuilder()
-                .AddText("Screenshot Saved as")
-                .AddText($"")
+                .AddText("Screenshot Saved")
                 .AddAudio(new ToastAudio() { Silent = true })
                 .Show(toast =>
                 {
