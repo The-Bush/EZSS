@@ -23,7 +23,7 @@ It was developed specifically for users who capture a high volume of window-scop
 >Download and run [single file release](published/singlefilerelease/EZSS.exe) (automatic updates not supported) 
 
 ## Usage
-
+![](https://github.com/The-Bush/EZSS/blob/main/EZSS%20How-To.gif)
 1. Run the application (executable).
 2. Choose a target directory where your screenshots will be saved.
 3. Configure your preferred settings, including hotkey, capture options, and auto-delete settings.
