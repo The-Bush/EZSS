@@ -14,10 +14,13 @@ It was developed specifically for users who capture a high volume of window-scop
 
 ## Installation
 
-Install with ClickOnce [here](http://htmlpreview.github.io/?https://raw.githubusercontent.com/The-Bush/EZSS/main/published/Publish.html)
+>Install with [ClickOnce](http://htmlpreview.github.io/?https://raw.githubusercontent.com/The-Bush/EZSS/main/published/Publish.html)
 
 
-Or download and run [setup.exe](published/setup.exe)
+>Download installer [setup.exe](published/setup.exe)
+
+
+>Download and run [single file release](published/singlefilerelease/EZSS.exe) (automatic updates not supported) 
 
 ## Usage
 
