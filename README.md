@@ -1,14 +1,13 @@
 # EZSS - Easy Screenshots
 
-EZSS (Easy Screenshot) is a simple C# application that allows you to capture and save screenshots easily. It provides various options for capturing screenshots, including capturing under the mouse cursor and setting hotkeys for quick screenshotting.
+EZSS (Easy Screenshot) is a simple C# application that allows you to capture and save screenshots with a single keystroke.
 
-It was developed specifically for users who capture a high volume of window-scope screenshots. It allows the user to capture and save screenshots with a single key-stroke.
+It was developed specifically for users who capture a high volume of window-scope screenshots.
 
 ## Features
 
-- Capture screenshots of the active window or entire screen.
-- Option to capture under the mouse cursor.
-- Set a customizable hotkey for quick screenshot capture.
+- Capture screenshots of the active window or window underneath the mouse
+- Set a customizable hotkey
 - Choose a target directory to save screenshots.
 - Toggle preview of captured screenshots.
 - Auto-delete old screenshots.
