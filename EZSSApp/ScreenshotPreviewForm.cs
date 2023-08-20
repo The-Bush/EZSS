@@ -41,8 +41,9 @@
         {
             UpdateCountdownLabel(milliseconds);
             await Task.Delay(milliseconds);
+            if (IsDisposed) { return; }
             mainForm.SaveScreenshot(screenshot);
-            Close();
+            Dispose();
         }
 
         private async void UpdateCountdownLabel(Int32 milliseconds)
@@ -69,12 +70,12 @@
         private void btnSave_Click(object sender, EventArgs e)
         {
             mainForm.SaveScreenshot(screenshot);
-            Close();
+            Dispose();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            Close();
+            Dispose();
         }
 
         private void pictureBoxScreenshot_Click(object sender, EventArgs e)
