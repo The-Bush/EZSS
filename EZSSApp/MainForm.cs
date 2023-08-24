@@ -2,6 +2,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
 using Microsoft.Toolkit.Uwp.Notifications;
+using System.Text;
+using Windows.Foundation.Collections;
+using Windows.UI.Notifications;
+using Windows.Data.Xml.Dom;
 
 namespace EZSS
 {
@@ -29,6 +33,8 @@ namespace EZSS
             chkbxAutoDelete.Checked = Properties.Settings.Default.AutoDelete;
             nupdwnAllowedQty.Value = Properties.Settings.Default.AllowedQuantity;
             cmbboxHotkey.Text = Properties.Settings.Default.Hotkey;
+
+            ToastNotificationManagerCompat.OnActivated += HandlePreviewSelection;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -90,7 +96,10 @@ namespace EZSS
         static extern bool GetCursorPos(out Point lpPoint);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern int GetWindowText(IntPtr hWnd, out string lpString, int nMaxCount);
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll")]
+        static extern int GetWindowTextLength(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -98,7 +107,6 @@ namespace EZSS
         [DllImport("user32.dll")]
         private static extern IntPtr SetFocus(IntPtr hWnd);
 
-        // Add GetAncestor method from windows API
         [DllImport("user32.dll")]
         private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
 
@@ -161,76 +169,155 @@ namespace EZSS
                         graphics.CopyFromScreen(new Point(windowRect.left, windowRect.top), Point.Empty, screenshot.Size);
                     }
 
-                    // Display the captured screenshot in a new window
-                    using (ScreenshotPreviewForm previewForm = ScreenshotPreviewForm.GetInstance(screenshot, this))
+
+                    //Reset the focused/foreground window
+                    SetForegroundWindow(previousForegroundHwnd);
+                    SetFocus(previousForegroundHwnd);
+
+                    if (Properties.Settings.Default.ViewPreview)
                     {
-                        SetForegroundWindow(previousForegroundHwnd);
-                        SetFocus(previousForegroundHwnd);
-
-                        if (Properties.Settings.Default.ViewPreview)
-                        {
-                            previewForm.ShowDialog();
-
-                        }
-
-                        else
-                        {
-                            if (SaveScreenshot(screenshot))
-                            {
-                                ScreenshotNotification();
-                            }
-                            previewForm.Dispose();
-                        }
-
-
-                        SetForegroundWindow(previousForegroundHwnd);
-                        SetFocus(previousForegroundHwnd);
+                        ScreenshotPreviewNotification(screenshot);
                     }
+
+                    else
+                    {
+                        if (SaveScreenshot(screenshot))
+                        {
+                            // Allocate correct string length first
+                            int length = GetWindowTextLength(hwnd);
+                            StringBuilder sb = new StringBuilder(length + 1);
+                            GetWindowText(hwnd, sb, sb.Capacity);
+                            string windowTitle = sb.ToString();
+
+                            ScreenshotNotification(windowTitle);
+                        }
+                    }
+
+
+                    SetForegroundWindow(previousForegroundHwnd);
+                    SetFocus(previousForegroundHwnd);
+
 
 
                 }
             }
         }
 
-        private static void ScreenshotNotification()
+        private static void ScreenshotNotification(string windowTitle)
         {
-
+            //Clear existing notifications
             ToastNotificationManagerCompat.History.Clear();
 
             new ToastContentBuilder()
-                .AddText("Screenshot Saved")
+                .AddText($"Screenshot Saved")
+                .AddText(windowTitle)
                 .AddAudio(new ToastAudio() { Silent = true })
                 .Show(toast =>
                 {
-                    toast.ExpirationTime = DateTime.Now.AddSeconds(3);
+                    toast.ExpirationTime = DateTime.Now.AddSeconds(5);
                 });
 
         }
 
-        //TODO, update preview window to a toast notification
-        private static void ScrenshotPreviewNotification(Bitmap Image)
+        private static void ScreenshotPreviewNotification(Bitmap Image)
         {
+            //Check if there is an existing notification and force it to dismiss
+            if (ToastNotificationManagerCompat.History.GetHistory().Any(x => x.Group == "EZSS" && x.Tag == "Preview"))
+            {
+
+            }
+
             //Generate a temporary saved file from the given Image bitmap
             string ImagePath = Path.GetTempFileName();
             Image.Save(ImagePath);
 
-            new ToastContentBuilder()
+            var previewNotification = new ToastContentBuilder()
                 .AddInlineImage(new Uri(ImagePath))
-                .AddArgument("ImagePath", ImagePath)
+                .AddArgument("tempImagePath", ImagePath)
+                .AddText("Select to save or discard screenshot")
+                .AddText("Will automtically save if no option selected")
                 .AddButton(new ToastButton()
                     .SetContent("Save")
                     .AddArgument("action", "save")
                     .SetBackgroundActivation())
                 .AddButton(new ToastButton()
                     .SetContent("Discard")
-                    .AddArgument("action", "delete")
-                    .SetBackgroundActivation())
-                .Show();
+                    .AddArgument("action", "discard")
+                    .SetBackgroundActivation());
 
+            previewNotification.Show(toast =>
+            {
+                toast.Tag = "Preview";
+                toast.Group = "EZSS";
+            });
 
+            //Check if any toast notifications from this program are open
+            if (ToastNotificationManagerCompat.History.GetHistory().Any(x => x.Group == "EZSS"))
+            {
+                //Check if the preview notification is still open
+                if (ToastNotificationManagerCompat.History.GetHistory().Any(x => x.Tag == "Preview"))
+                {
+                    //Sub to dismissed event for the preview notification
+                    ToastNotificationManagerCompat.History.GetHistory().First(x => x.Tag == "Preview").Dismissed += (sender, e) =>
+                    {
+                        switch (e.Reason)
+                        {
+
+                            case ToastDismissalReason.UserCanceled:
+                                File.Delete(ImagePath);
+                                break;
+
+                            case ToastDismissalReason.TimedOut:
+                                SaveTempImage(ImagePath);
+                                break;
+
+                            case ToastDismissalReason.ApplicationHidden:
+                                SaveTempImage(ImagePath);
+                                break;
+                        }
+                        // Clear notifications from action center
+                        ToastNotificationManagerCompat.History.Clear();
+                    };
+                }
+            }
         }
 
-        public bool SaveScreenshot(Bitmap screenshot)
+        private void HandlePreviewSelection(ToastNotificationActivatedEventArgsCompat e)
+        {
+            ToastArguments args = ToastArguments.Parse(e.Argument);
+            ValueSet userInput = e.UserInput;
+
+            if (args["action"] == "save")
+            {
+                String tempImagePath = args["tempImagePath"];
+                SaveTempImage(tempImagePath);
+            }
+
+            if (args["action"] == "discard")
+            {
+                //Delete the temp file at the given path
+                File.Delete(args["tempImagePath"]);
+            }
+        }
+
+        private static void SaveTempImage(string tempImagePath)
+        {
+            //Create a new bitmap from the given image path, save it, then delete the temp file at the path
+            Bitmap Image = new Bitmap(tempImagePath);
+            try
+            {
+                SaveScreenshot(Image);
+            }
+
+            finally
+            {
+                Image.Dispose();
+            }
+
+            File.Delete(tempImagePath);
+        }
+
+        public static bool SaveScreenshot(Bitmap screenshot)
         {
             string directory = Properties.Settings.Default.SaveDirectory;
 
@@ -321,6 +408,33 @@ namespace EZSS
         private void btnMinimize_Click(object sender, EventArgs e)
         {
             WindowState = FormWindowState.Minimized;
+        }
+
+
+        // Click and drag window functionality
+        private bool mouseDown;
+        private Point lastLocation;
+        private void MainForm_MouseDown(object sender, MouseEventArgs e)
+        {
+            mouseDown = true;
+            lastLocation = e.Location;
+
+        }
+
+        private void MainForm_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (mouseDown)
+            {
+                this.Location = new Point(
+                    (this.Location.X - lastLocation.X) + e.X, (this.Location.Y - lastLocation.Y) + e.Y);
+
+                this.Update();
+            }
+        }
+
+        private void MainForm_MouseUp(object sender, MouseEventArgs e)
+        {
+            mouseDown = false;
         }
     }
 }

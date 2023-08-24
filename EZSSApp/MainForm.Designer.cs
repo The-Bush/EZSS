@@ -220,6 +220,9 @@
             extendedPanel1.Size = new Size(295, 21);
             extendedPanel1.TabIndex = 16;
             extendedPanel1.TopMost = true;
+            extendedPanel1.MouseDown += MainForm_MouseDown;
+            extendedPanel1.MouseMove += MainForm_MouseMove;
+            extendedPanel1.MouseUp += MainForm_MouseUp;
             // 
             // lblAppName
             // 
@@ -309,6 +312,9 @@
             Text = "Form1";
             Load += MainForm_Load;
             SizeChanged += MainForm_SizeChanged;
+            MouseDown += MainForm_MouseDown;
+            MouseMove += MainForm_MouseMove;
+            MouseUp += MainForm_MouseUp;
             extendedPanel1.ResumeLayout(false);
             extendedPanel1.PerformLayout();
             ResumeLayout(false);
