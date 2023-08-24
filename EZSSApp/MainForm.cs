@@ -221,12 +221,6 @@ namespace EZSS
 
         private static void ScreenshotPreviewNotification(Bitmap Image)
         {
-            //Check if there is an existing notification and force it to dismiss
-            if (ToastNotificationManagerCompat.History.GetHistory().Any(x => x.Group == "EZSS" && x.Tag == "Preview"))
-            {
-
-            }
-
             //Generate a temporary saved file from the given Image bitmap
             string ImagePath = Path.GetTempFileName();
             Image.Save(ImagePath);
