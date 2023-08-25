@@ -309,7 +309,8 @@
             MinimumSize = new Size(190, 40);
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Form1";
+            Text = "EZ ScreenShot";
+            FormClosing += MainForm_FormClosing;
             Load += MainForm_Load;
             SizeChanged += MainForm_SizeChanged;
             MouseDown += MainForm_MouseDown;

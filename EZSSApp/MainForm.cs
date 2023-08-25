@@ -1,11 +1,10 @@
+using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Drawing.Imaging;
-using Microsoft.Toolkit.Uwp.Notifications;
 using System.Text;
+using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.Foundation.Collections;
 using Windows.UI.Notifications;
-using Windows.Data.Xml.Dom;
 
 namespace EZSS
 {
@@ -14,6 +13,7 @@ namespace EZSS
         private HiddenHotkeyForm hiddenForm;
         public MainForm()
         {
+            CheckForUpgrade();
             InitializeComponent();
             hiddenForm = new HiddenHotkeyForm(this);
 
@@ -39,10 +39,24 @@ namespace EZSS
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // Set the form to the bottom right of the screen
-            int x = Screen.PrimaryScreen.WorkingArea.Width - this.Width;
-            int y = Screen.PrimaryScreen.WorkingArea.Height - this.Height;
-            this.Location = new Point(x, y);
+
+        }
+
+        private void CheckForUpgrade()
+        {
+            if (Properties.Settings.Default.UpgradeSettings)
+            {
+                Properties.Settings.Default.Upgrade();
+                Properties.Settings.Default.UpgradeSettings = false;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // When program is closed, reset the NotificationWarningGiven flag
+            Properties.Settings.Default.NotificationWarningGiven = false;
+            Properties.Settings.Default.Save();
         }
 
         // Update the Target Directory for saved screenshots
@@ -54,9 +68,6 @@ namespace EZSS
                 lblTargetDirectory.Text = dialog.SelectedPath;
                 Properties.Settings.Default.SaveDirectory = dialog.SelectedPath;
                 Properties.Settings.Default.Save();
-            }
-            else
-            {
             }
         }
 
@@ -169,7 +180,6 @@ namespace EZSS
                         graphics.CopyFromScreen(new Point(windowRect.left, windowRect.top), Point.Empty, screenshot.Size);
                     }
 
-
                     //Reset the focused/foreground window
                     SetForegroundWindow(previousForegroundHwnd);
                     SetFocus(previousForegroundHwnd);
@@ -192,19 +202,17 @@ namespace EZSS
                             ScreenshotNotification(windowTitle);
                         }
                     }
-
-
                     SetForegroundWindow(previousForegroundHwnd);
                     SetFocus(previousForegroundHwnd);
-
-
-
                 }
             }
         }
 
-        private static void ScreenshotNotification(string windowTitle)
+        private void ScreenshotNotification(string windowTitle)
         {
+
+            CheckNotificationsEnabled();
+
             //Clear existing notifications
             ToastNotificationManagerCompat.History.Clear();
 
@@ -219,12 +227,13 @@ namespace EZSS
 
         }
 
-        private static void ScreenshotPreviewNotification(Bitmap Image)
+        private void ScreenshotPreviewNotification(Bitmap Image)
         {
-            //Check if there is an existing notification and force it to dismiss
-            if (ToastNotificationManagerCompat.History.GetHistory().Any(x => x.Group == "EZSS" && x.Tag == "Preview"))
+            //Check if notifications are enabled, bypass notification and go straight to save if not
+            if (CheckNotificationsEnabled() == false)
             {
-
+                SaveScreenshot(Image);
+                return;
             }
 
             //Generate a temporary saved file from the given Image bitmap
@@ -243,7 +252,8 @@ namespace EZSS
                 .AddButton(new ToastButton()
                     .SetContent("Discard")
                     .AddArgument("action", "discard")
-                    .SetBackgroundActivation());
+                    .SetBackgroundActivation())
+                .AddAudio(new ToastAudio() { Silent = true });
 
             previewNotification.Show(toast =>
             {
@@ -282,6 +292,31 @@ namespace EZSS
             }
         }
 
+        public bool CheckNotificationsEnabled()
+        {
+            var toastNotifier = ToastNotificationManagerCompat.CreateToastNotifier();
+
+            bool notificationsEnabled = toastNotifier.Setting == NotificationSetting.Enabled;
+
+            if (!notificationsEnabled)
+            {
+                if (Properties.Settings.Default.NotificationWarningGiven)
+                {
+                    return false;
+                }
+
+                MessageBox.Show("Notifications are disabled for EZSS/this device. It is recommended to enable them to get confirmation your screenshot was taken, and it is required to use the preview feature. Your screenshot has still been saved.", "Notifications Disabled", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Properties.Settings.Default.NotificationWarningGiven = true;
+                Properties.Settings.Default.Save();
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+
+        }
+
         private void HandlePreviewSelection(ToastNotificationActivatedEventArgsCompat e)
         {
             ToastArguments args = ToastArguments.Parse(e.Argument);
@@ -300,7 +335,7 @@ namespace EZSS
             }
         }
 
-        private static void SaveTempImage(string tempImagePath)
+        private void SaveTempImage(string tempImagePath)
         {
             //Create a new bitmap from the given image path, save it, then delete the temp file at the path
             Bitmap Image = new Bitmap(tempImagePath);
@@ -317,7 +352,7 @@ namespace EZSS
             File.Delete(tempImagePath);
         }
 
-        public static bool SaveScreenshot(Bitmap screenshot)
+        public bool SaveScreenshot(Bitmap screenshot)
         {
             string directory = Properties.Settings.Default.SaveDirectory;
 
@@ -342,13 +377,13 @@ namespace EZSS
 
         }
 
-        private static string GenerateFileName()
+        private string GenerateFileName()
         {
             //TODO: Add option to customize file names
             return $"{DateTime.Now:yyyy-MM-dd--HH-mm-ss}--" + $"EZSS.png";
         }
 
-        private static void DeleteOldScreenshots(string directory)
+        private void DeleteOldScreenshots(string directory)
         {
             // Dispose of any screenshots in target directory that exceed the maximum number of screenshots
             string[] files = Directory.GetFiles(directory, "*EZSS.png");
