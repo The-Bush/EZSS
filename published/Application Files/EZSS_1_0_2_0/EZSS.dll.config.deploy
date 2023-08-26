@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <configSections>
+        <sectionGroup name="userSettings" type="System.Configuration.UserSettingsGroup, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" >
+            <section name="EZSS.Properties.Settings" type="System.Configuration.ClientSettingsSection, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" allowExeDefinition="MachineToLocalUser" requirePermission="false" />
+        </sectionGroup>
+    </configSections>
+    <userSettings>
+        <EZSS.Properties.Settings>
+            <setting name="SaveDirectory" serializeAs="String">
+                <value />
+            </setting>
+            <setting name="ViewPreview" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="CaptureUnderMouse" serializeAs="String">
+                <value>True</value>
+            </setting>
+            <setting name="AutoDelete" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="AllowedQuantity" serializeAs="String">
+                <value>5</value>
+            </setting>
+            <setting name="Hotkey" serializeAs="String">
+                <value>F1</value>
+            </setting>
+            <setting name="NotificationWarningGiven" serializeAs="String">
+                <value>False</value>
+            </setting>
+            <setting name="UpgradeSettings" serializeAs="String">
+                <value>True</value>
+            </setting>
+        </EZSS.Properties.Settings>
+    </userSettings>
+</configuration>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -5,6 +6,7 @@ using System.Text;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Windows.Foundation.Collections;
 using Windows.UI.Notifications;
+using Microsoft.Win32;
 
 namespace EZSS
 {
@@ -13,6 +15,8 @@ namespace EZSS
         private HiddenHotkeyForm hiddenForm;
         public MainForm()
         {
+            CheckForInstance();
+
             CheckForUpgrade();
             InitializeComponent();
             hiddenForm = new HiddenHotkeyForm(this);
@@ -34,7 +38,28 @@ namespace EZSS
             nupdwnAllowedQty.Value = Properties.Settings.Default.AllowedQuantity;
             cmbboxHotkey.Text = Properties.Settings.Default.Hotkey;
 
+            CheckRunOnStart();
+            //If running on startup, hide the form
+            if (Program.LaunchedViaStartup)
+            {
+                this.WindowState = FormWindowState.Minimized;
+                this.ShowInTaskbar = false;
+                Hide();
+            }
+
+            // Subscribe to toast notification events
             ToastNotificationManagerCompat.OnActivated += HandlePreviewSelection;
+        }
+
+        private static void CheckForInstance()
+        {
+            //Check for other running instances of the program. Close this thread if there is one.
+            Process[] processes = Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName);
+            if (processes.Length > 1)
+            {
+                MessageBox.Show("EZ ScreenShot is already running.", "EZ ScreenShot", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Environment.Exit(0);
+            }
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -72,6 +97,21 @@ namespace EZSS
         }
 
         private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            ShowMainForm();
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowMainForm();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void ShowMainForm()
         {
             Show();
             this.WindowState = FormWindowState.Normal;
@@ -244,7 +284,7 @@ namespace EZSS
                 .AddInlineImage(new Uri(ImagePath))
                 .AddArgument("tempImagePath", ImagePath)
                 .AddText("Select to save or discard screenshot")
-                .AddText("Will automtically save if no option selected")
+                .AddText("Will automatically save if no option selected")
                 .AddButton(new ToastButton()
                     .SetContent("Save")
                     .AddArgument("action", "save")
@@ -470,6 +510,58 @@ namespace EZSS
         private void MainForm_MouseUp(object sender, MouseEventArgs e)
         {
             mouseDown = false;
+        }
+
+        // Run on startup functionality
+        private const string AppName = "EZScreenShot";
+        private const string RunRegistryKey = @"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+        private void chkbxRunStartup_CheckedChanged(object sender)
+        {
+            RegistryKey? regKey = Registry.CurrentUser.OpenSubKey(RunRegistryKey, true);
+
+            if (regKey != null)
+            {
+                if (chkbxRunStartup.Checked)
+                {
+                    //set registry value with appname and argument "startup"
+                    regKey.SetValue(AppName, Application.ExecutablePath + " startup");
+                }
+                else
+                {
+                    // Set the registry status to disable the app from starting on startup
+                    regKey.DeleteValue(AppName);
+                }
+
+                regKey.Close();
+            }
+            else
+            {
+                MessageBox.Show("Unable to access registry key.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                chkbxAutoDelete.Checked = false;
+            }
+        }
+
+        private bool CheckRunOnStart()
+        {
+            RegistryKey? regKey = Registry.CurrentUser.OpenSubKey(RunRegistryKey, true);
+
+            if (regKey != null)
+            {
+                if (regKey.GetValue(AppName) != null)
+                {
+                    chkbxRunStartup.Checked = true;
+                    regKey.Close();
+                    return true;
+                }
+                else
+                {
+                    chkbxRunStartup.Checked = false;
+                    regKey.Close();
+                    return false;
+                }
+            }
+
+            return false;
         }
     }
 }

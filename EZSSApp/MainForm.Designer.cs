@@ -33,6 +33,9 @@
             lblTargetDirectoryTitle = new Label();
             dlgTargetDirectory = new FolderBrowserDialog();
             notifyIcon = new NotifyIcon(components);
+            ctxstripNotifyIcon = new ContextMenuStrip(components);
+            openToolStripMenuItem = new ToolStripMenuItem();
+            exitToolStripMenuItem = new ToolStripMenuItem();
             ttpCaptureUnderMouse = new ToolTip(components);
             lblShortcutKeyTitle = new Label();
             chkbxAutoDelete = new ReaLTaiizor.Controls.ForeverCheckBox();
@@ -40,6 +43,7 @@
             chkbxTogglePreview = new ReaLTaiizor.Controls.ForeverCheckBox();
             label1 = new Label();
             lblTargetDirectory = new ReaLTaiizor.Controls.ForeverTextBox();
+            chkbxRunStartup = new ReaLTaiizor.Controls.ForeverCheckBox();
             nupdwnAllowedQty = new ReaLTaiizor.Controls.ForeverNumeric();
             ttpAutoDelete = new ToolTip(components);
             cmbboxHotkey = new ReaLTaiizor.Controls.ForeverComboBox();
@@ -48,6 +52,7 @@
             btnMinimize = new ReaLTaiizor.Controls.ForeverMinimize();
             btnClose = new ReaLTaiizor.Controls.ForeverClose();
             btnChangeDirectory = new ReaLTaiizor.Controls.ForeverButton();
+            ctxstripNotifyIcon.SuspendLayout();
             extendedPanel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -65,10 +70,31 @@
             // notifyIcon
             // 
             notifyIcon.BalloonTipIcon = ToolTipIcon.Info;
+            notifyIcon.ContextMenuStrip = ctxstripNotifyIcon;
             notifyIcon.Icon = (Icon)resources.GetObject("notifyIcon.Icon");
             notifyIcon.Text = "EZSS";
             notifyIcon.Visible = true;
             notifyIcon.MouseDoubleClick += notifyIcon_MouseDoubleClick;
+            // 
+            // ctxstripNotifyIcon
+            // 
+            ctxstripNotifyIcon.Items.AddRange(new ToolStripItem[] { openToolStripMenuItem, exitToolStripMenuItem });
+            ctxstripNotifyIcon.Name = "ctxstripNotifyIcon";
+            ctxstripNotifyIcon.Size = new Size(104, 48);
+            // 
+            // openToolStripMenuItem
+            // 
+            openToolStripMenuItem.Name = "openToolStripMenuItem";
+            openToolStripMenuItem.Size = new Size(103, 22);
+            openToolStripMenuItem.Text = "Open";
+            openToolStripMenuItem.Click += openToolStripMenuItem_Click;
+            // 
+            // exitToolStripMenuItem
+            // 
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.Size = new Size(103, 22);
+            exitToolStripMenuItem.Text = "Exit";
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // lblShortcutKeyTitle
             // 
@@ -90,7 +116,7 @@
             chkbxAutoDelete.Checked = false;
             chkbxAutoDelete.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point);
             chkbxAutoDelete.ForeColor = Color.FromArgb(243, 243, 243);
-            chkbxAutoDelete.Location = new Point(12, 186);
+            chkbxAutoDelete.Location = new Point(12, 218);
             chkbxAutoDelete.Name = "chkbxAutoDelete";
             chkbxAutoDelete.Options = ReaLTaiizor.Controls.ForeverCheckBox._Options.Style1;
             chkbxAutoDelete.Size = new Size(130, 22);
@@ -107,7 +133,7 @@
             chkbxCaptureUnderMouse.Checked = false;
             chkbxCaptureUnderMouse.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point);
             chkbxCaptureUnderMouse.ForeColor = Color.FromArgb(243, 243, 243);
-            chkbxCaptureUnderMouse.Location = new Point(12, 158);
+            chkbxCaptureUnderMouse.Location = new Point(12, 190);
             chkbxCaptureUnderMouse.Name = "chkbxCaptureUnderMouse";
             chkbxCaptureUnderMouse.Options = ReaLTaiizor.Controls.ForeverCheckBox._Options.Style1;
             chkbxCaptureUnderMouse.Size = new Size(226, 22);
@@ -124,7 +150,7 @@
             chkbxTogglePreview.Checked = false;
             chkbxTogglePreview.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point);
             chkbxTogglePreview.ForeColor = Color.FromArgb(243, 243, 243);
-            chkbxTogglePreview.Location = new Point(12, 130);
+            chkbxTogglePreview.Location = new Point(12, 162);
             chkbxTogglePreview.Name = "chkbxTogglePreview";
             chkbxTogglePreview.Options = ReaLTaiizor.Controls.ForeverCheckBox._Options.Style1;
             chkbxTogglePreview.Size = new Size(202, 22);
@@ -138,7 +164,7 @@
             label1.AutoSize = true;
             label1.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point);
             label1.ForeColor = Color.FromArgb(243, 243, 243);
-            label1.Location = new Point(58, 225);
+            label1.Location = new Point(58, 257);
             label1.Name = "label1";
             label1.Size = new Size(126, 13);
             label1.TabIndex = 14;
@@ -168,6 +194,23 @@
             ttpCaptureUnderMouse.SetToolTip(lblTargetDirectory, "The directory screenshots will be saved in.");
             lblTargetDirectory.UseSystemPasswordChar = false;
             // 
+            // chkbxRunStartup
+            // 
+            chkbxRunStartup.BackColor = Color.FromArgb(60, 70, 73);
+            chkbxRunStartup.BaseColor = Color.FromArgb(45, 47, 49);
+            chkbxRunStartup.BorderColor = Color.DodgerBlue;
+            chkbxRunStartup.Checked = false;
+            chkbxRunStartup.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point);
+            chkbxRunStartup.ForeColor = Color.FromArgb(243, 243, 243);
+            chkbxRunStartup.Location = new Point(12, 134);
+            chkbxRunStartup.Name = "chkbxRunStartup";
+            chkbxRunStartup.Options = ReaLTaiizor.Controls.ForeverCheckBox._Options.Style1;
+            chkbxRunStartup.Size = new Size(130, 22);
+            chkbxRunStartup.TabIndex = 18;
+            chkbxRunStartup.Text = "Run on startup";
+            ttpCaptureUnderMouse.SetToolTip(chkbxRunStartup, "Enable to have EZSS automatically run when system boots.");
+            chkbxRunStartup.CheckedChanged += chkbxRunStartup_CheckedChanged;
+            // 
             // nupdwnAllowedQty
             // 
             nupdwnAllowedQty.BaseColor = Color.FromArgb(45, 47, 49);
@@ -176,7 +219,7 @@
             nupdwnAllowedQty.ButtonColorC = Color.White;
             nupdwnAllowedQty.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Regular, GraphicsUnit.Point);
             nupdwnAllowedQty.ForeColor = Color.Silver;
-            nupdwnAllowedQty.Location = new Point(200, 216);
+            nupdwnAllowedQty.Location = new Point(200, 248);
             nupdwnAllowedQty.Maximum = 100L;
             nupdwnAllowedQty.Minimum = 0L;
             nupdwnAllowedQty.Name = "nupdwnAllowedQty";
@@ -291,8 +334,9 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(60, 70, 73);
-            ClientSize = new Size(292, 256);
+            ClientSize = new Size(292, 288);
             Controls.Add(extendedPanel1);
+            Controls.Add(chkbxRunStartup);
             Controls.Add(btnChangeDirectory);
             Controls.Add(lblTargetDirectory);
             Controls.Add(label1);
@@ -316,6 +360,7 @@
             MouseDown += MainForm_MouseDown;
             MouseMove += MainForm_MouseMove;
             MouseUp += MainForm_MouseUp;
+            ctxstripNotifyIcon.ResumeLayout(false);
             extendedPanel1.ResumeLayout(false);
             extendedPanel1.PerformLayout();
             ResumeLayout(false);
@@ -343,5 +388,10 @@
         private ReaLTaiizor.Controls.ForeverClose btnClose;
         private ReaLTaiizor.Controls.ForeverMinimize btnMinimize;
         private ReaLTaiizor.Controls.ForeverLabel lblAppName;
+        private ReaLTaiizor.Controls.ForeverCheckBox chkbxRunStartup;
+        private ContextMenuStrip ctxstripNotifyIcon;
+        private ToolStripMenuItem openToolStripMenuItem;
+        private ToolStripMenuItem exitToolStripMenuItem;
+        private ToolStripMenuItem startWithWindowsToolStripMenuItem;
     }
 }
