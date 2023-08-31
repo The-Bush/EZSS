@@ -233,19 +233,25 @@ namespace EZSS
                     {
                         if (SaveScreenshot(screenshot))
                         {
-                            // Allocate correct string length first
-                            int length = GetWindowTextLength(hwnd);
-                            StringBuilder sb = new StringBuilder(length + 1);
-                            GetWindowText(hwnd, sb, sb.Capacity);
-                            string windowTitle = sb.ToString();
-
+                            string windowTitle = GetWindowTitle(hwnd);
                             ScreenshotNotification(windowTitle);
                         }
                     }
+                    screenshot.Dispose();
                     SetForegroundWindow(previousForegroundHwnd);
                     SetFocus(previousForegroundHwnd);
                 }
             }
+        }
+
+        private static string GetWindowTitle(IntPtr hwnd)
+        {
+            // Allocate correct string length
+            int length = GetWindowTextLength(hwnd);
+            StringBuilder sb = new StringBuilder(length + 1);
+            GetWindowText(hwnd, sb, sb.Capacity);
+            string windowTitle = sb.ToString();
+            return windowTitle;
         }
 
         private void ScreenshotNotification(string windowTitle)
@@ -278,7 +284,15 @@ namespace EZSS
 
             //Generate a temporary saved file from the given Image bitmap
             string ImagePath = Path.GetTempFileName();
-            Image.Save(ImagePath);
+
+            try
+            {
+                Image.Save(ImagePath);
+            }
+            finally
+            {
+                Image.Dispose();
+            }
 
             var previewNotification = new ToastContentBuilder()
                 .AddInlineImage(new Uri(ImagePath))
@@ -373,6 +387,9 @@ namespace EZSS
                 //Delete the temp file at the given path
                 File.Delete(args["tempImagePath"]);
             }
+
+            ToastNotificationManagerCompat.History.Clear();
+
         }
 
         private void SaveTempImage(string tempImagePath)
